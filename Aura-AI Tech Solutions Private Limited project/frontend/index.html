@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload & Preview</title>
+    <style>
+     
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            padding: 40px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-10px);
+        }
+
+        h1 {
+            color: #0056b3;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        label {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="file"] {
+            margin-top: 10px;
+            padding: 10px;
+            border: 2px solid #dfe6e9;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 1rem;
+            color: #333;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="file"]:hover {
+            border-color: #74b9ff;
+            background-color: #ecf0f1;
+        }
+
+
+        button {
+            margin-top: 20px;
+            padding: 12px 20px;
+            background-color: #0984e3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #74b9ff;
+            transform: translateY(-5px);
+        }
+
+        button:active {
+            background-color: #0074d9;
+        }
+
+        .preview {
+            margin-top: 20px;
+            border: 1px solid #dfe6e9;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 150px;
+            max-height: 400px;
+            overflow: hidden;
+            background-color: #f9f9f9;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .preview img,
+        .preview video,
+        .preview audio {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        embed {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #manipulateImage {
+            display: none;
+            background-color: #00b894;
+            margin-top: 10px;
+        }
+
+        #manipulateImage:hover {
+            background-color: #55efc4;
+            transform: scale(1.05);
+        }
+
+        button[type="submit"] {
+            background-color: #2d3436;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #636e72;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Upload and Preview File</h1>
+
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label for="fileInput">Choose file:</label>
+            <input type="file" id="fileInput" name="file" accept="image/*,audio/*,video/*,.pdf">
+            <button type="submit">Upload</button>
+        </form>
+
+        <div id="preview" class="preview"></div>
+
+       
+        <button id="manipulateImage">Apply Filter to Image</button>
+    </div>
+
+    <script>
+     
+        document.getElementById('fileInput').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('preview');
+            const fileType = file.type;
+
+            preview.innerHTML = ''; 
+
+            if (fileType.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                preview.appendChild(img);
+                document.getElementById('manipulateImage').style.display = 'inline-block'; // Show image manipulation button
+            } else if (fileType.startsWith('audio/')) {
+                const audio = document.createElement('audio');
+                audio.controls = true;
+                audio.src = URL.createObjectURL(file);
+                preview.appendChild(audio);
+            } else if (fileType.startsWith('video/')) {
+                const video = document.createElement('video');
+                video.controls = true;
+                video.style.maxWidth = '300px';
+                video.src = URL.createObjectURL(file);
+                preview.appendChild(video);
+            } else if (fileType === 'application/pdf') {
+                const embed = document.createElement('embed');
+                embed.src = URL.createObjectURL(file);
+                embed.type = 'application/pdf';
+                embed.width = '100%';
+                embed.height = '400px';
+                preview.appendChild(embed);
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+                .then(data => console.log(data))
+                .catch(error => console.error('Error:', error));
+        });
+
+       
+        document.getElementById('manipulateImage').addEventListener('click', function () {
+            fetch('/manipulate-image', {
+                method: 'POST'
+            }).then(response => response.json())
+                .then(data => {
+                    console.log('Image manipulated:', data);
+                    alert('Image manipulation applied.');
+                });
+        });
+    </script>
+</body>
+
+</html>
